@@ -1,37 +1,24 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import appLogo from '/favicon.svg'
-import PWABadge from './PWABadge.jsx'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, useParams, useNavigate } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import RecipeDetail from "./components/recipe/RecipeDetail";
+import PWABadge from "./PWABadge";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+function RecipeDetailWrapper() {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={appLogo} className="logo" alt="resep-nusantara-modul4-kel42 logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>resep-nusantara-modul4-kel42</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-      <PWABadge />
-    </>
-  )
+  return <RecipeDetail recipeId={id} onBack={() => navigate(-1)} />;
 }
 
-export default App
+export default function App() {
+  return (
+    <Router>
+      <PWABadge />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/recipe/:id" element={<RecipeDetailWrapper />} />
+      </Routes>
+    </Router>
+  );
+}

@@ -10,6 +10,7 @@ import recipeService from '../../services/recipeService';
 import ConfirmModal from '../modals/ConfirmModal';
 import FavoriteButton from '../common/FavoriteButton';
 import userService from '../../services/userService';
+import ShareButton from '../common/ShareButton';
 
 export default function RecipeDetail({ recipeId, onBack, onEdit, category = 'makanan' }) {
     const { recipe, loading: recipeLoading, error: recipeError } = useRecipe(recipeId);
@@ -167,29 +168,33 @@ export default function RecipeDetail({ recipeId, onBack, onEdit, category = 'mak
                     </button>
 
                     {/* Action Buttons */}
-                    {onEdit && (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => {
-                                    console.log('🖱️ Edit button clicked in RecipeDetail');
-                                    console.log('📝 Recipe ID:', recipeId);
-                                    console.log('🔧 onEdit function:', onEdit);
-                                    onEdit(recipeId);
-                                }}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            >
-                                <Edit className="w-4 h-4" />
-                                <span className="hidden md:inline">Edit</span>
-                            </button>
-                            <button
-                                onClick={() => setShowDeleteModal(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                                <span className="hidden md:inline">Hapus</span>
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex gap-2">
+                        {/* TAMBAHKAN SHARE BUTTON DI SINI */}
+                        <ShareButton
+                            recipeId={recipeId}
+                            recipeName={recipe?.name}
+                            recipeImage={recipe?.image_url}
+                        />
+
+                        {onEdit && (
+                            <>
+                                <button
+                                    onClick={() => onEdit(recipeId)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                    <span className="hidden md:inline">Edit</span>
+                                </button>
+                                <button
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    <span className="hidden md:inline">Hapus</span>
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -264,8 +269,8 @@ export default function RecipeDetail({ recipeId, onBack, onEdit, category = 'mak
                                         <Star
                                             key={star}
                                             className={`w-5 h-5 ${star <= Math.round(recipe.average_rating)
-                                                    ? 'text-amber-500 fill-current'
-                                                    : 'text-slate-300'
+                                                ? 'text-amber-500 fill-current'
+                                                : 'text-slate-300'
                                                 }`}
                                         />
                                     ))}
@@ -366,8 +371,8 @@ export default function RecipeDetail({ recipeId, onBack, onEdit, category = 'mak
                                         >
                                             <Star
                                                 className={`w-8 h-8 ${star <= rating
-                                                        ? 'text-amber-500 fill-current'
-                                                        : 'text-slate-300'
+                                                    ? 'text-amber-500 fill-current'
+                                                    : 'text-slate-300'
                                                     } hover:scale-110 transition-transform`}
                                             />
                                         </button>
@@ -421,8 +426,8 @@ export default function RecipeDetail({ recipeId, onBack, onEdit, category = 'mak
                                                     <Star
                                                         key={star}
                                                         className={`w-4 h-4 ${star <= review.rating
-                                                                ? 'text-amber-500 fill-current'
-                                                                : 'text-slate-300'
+                                                            ? 'text-amber-500 fill-current'
+                                                            : 'text-slate-300'
                                                             }`}
                                                     />
                                                 ))}
