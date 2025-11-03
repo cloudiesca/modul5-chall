@@ -1,8 +1,15 @@
-// src/main.jsx
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools' // 🧩 Tambahan Devtools
+import {
+  QueryClient,
+} from '@tanstack/react-query'
+import {
+  PersistQueryClientProvider
+} from '@tanstack/react-query-persist-client'
+import {
+  createSyncStoragePersister
+} from '@tanstack/query-sync-storage-persister'
+
 import SplashScreen from './pages/SplashScreen';
 import HomePage from './pages/HomePage';
 import MakananPage from './pages/MakananPage';
@@ -13,32 +20,35 @@ import EditRecipePage from './pages/EditRecipePage';
 import RecipeDetail from './components/recipe/RecipeDetail';
 import DesktopNavbar from './components/navbar/DesktopNavbar';
 import MobileNavbar from './components/navbar/MobileNavbar';
-import './index.css'
 import PWABadge from './PWABadge';
+import './index.css'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
-// 🧠 Buat QueryClient untuk caching global
+// === React Query Config ===
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // cache tetap fresh 5 menit
-      cacheTime: 10 * 60 * 1000, // simpan cache 10 menit di memory
-      refetchOnWindowFocus: false, // biar gak refetch pas ganti tab
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
     },
   },
+});
+
+// === Persist ke LocalStorage ===
+const localStoragePersister = createSyncStoragePersister({
+  storage: window.localStorage,
 });
 
 function AppRoot() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState('home');
-  const [mode, setMode] = useState('list'); // 'list', 'detail', 'create', 'edit'
+  const [mode, setMode] = useState('list');
   const [selectedRecipeId, setSelectedRecipeId] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('makanan');
   const [editingRecipeId, setEditingRecipeId] = useState(null);
 
-  const handleSplashComplete = () => {
-    setShowSplash(false);
-  };
-
+  const handleSplashComplete = () => setShowSplash(false);
   const handleNavigation = (page) => {
     setCurrentPage(page);
     setMode('list');
@@ -46,23 +56,16 @@ function AppRoot() {
     setEditingRecipeId(null);
   };
 
-  const handleCreateRecipe = () => {
-    setMode('create');
-  };
-
+  const handleCreateRecipe = () => setMode('create');
   const handleRecipeClick = (recipeId, category) => {
     setSelectedRecipeId(recipeId);
     setSelectedCategory(category || currentPage);
     setMode('detail');
   };
-
-  const handleEditRecipe = (recipeId) => {
-    console.log('🔧 Edit button clicked! Recipe ID:', recipeId);
-    setEditingRecipeId(recipeId);
+  const handleEditRecipe = (id) => {
+    setEditingRecipeId(id);
     setMode('edit');
-    console.log('✅ Mode changed to: edit');
   };
-
   const handleBack = () => {
     setMode('list');
     setSelectedRecipeId(null);
@@ -72,64 +75,28 @@ function AppRoot() {
   const handleCreateSuccess = (newRecipe) => {
     alert('Resep berhasil dibuat!');
     setMode('list');
-    if (newRecipe && newRecipe.category) {
-      setCurrentPage(newRecipe.category);
-    }
+    if (newRecipe?.category) setCurrentPage(newRecipe.category);
   };
-
-  const handleEditSuccess = (updatedRecipe) => {
+  const handleEditSuccess = () => {
     alert('Resep berhasil diperbarui!');
     setMode('list');
   };
 
   const renderCurrentPage = () => {
-    if (mode === 'create') {
-      return (
-        <CreateRecipePage
-          onBack={handleBack}
-          onSuccess={handleCreateSuccess}
-        />
-      );
-    }
-
-    if (mode === 'edit') {
-      return (
-        <EditRecipePage
-          recipeId={editingRecipeId}
-          onBack={handleBack}
-          onSuccess={handleEditSuccess}
-        />
-      );
-    }
-
-    if (mode === 'detail') {
-      return (
-        <RecipeDetail
-          recipeId={selectedRecipeId}
-          category={selectedCategory}
-          onBack={handleBack}
-          onEdit={handleEditRecipe}
-        />
-      );
-    }
+    if (mode === 'create') return <CreateRecipePage onBack={handleBack} onSuccess={handleCreateSuccess} />;
+    if (mode === 'edit') return <EditRecipePage recipeId={editingRecipeId} onBack={handleBack} onSuccess={handleEditSuccess} />;
+    if (mode === 'detail') return <RecipeDetail recipeId={selectedRecipeId} category={selectedCategory} onBack={handleBack} onEdit={handleEditRecipe} />;
 
     switch (currentPage) {
-      case 'home':
-        return <HomePage onRecipeClick={handleRecipeClick} onNavigate={handleNavigation} />;
-      case 'makanan':
-        return <MakananPage onRecipeClick={handleRecipeClick} />;
-      case 'minuman':
-        return <MinumanPage onRecipeClick={handleRecipeClick} />;
-      case 'profile':
-        return <ProfilePage onRecipeClick={handleRecipeClick} />;
-      default:
-        return <HomePage onRecipeClick={handleRecipeClick} onNavigate={handleNavigation} />;
+      case 'home': return <HomePage onRecipeClick={handleRecipeClick} onNavigate={handleNavigation} />;
+      case 'makanan': return <MakananPage onRecipeClick={handleRecipeClick} />;
+      case 'minuman': return <MinumanPage onRecipeClick={handleRecipeClick} />;
+      case 'profile': return <ProfilePage onRecipeClick={handleRecipeClick} />;
+      default: return <HomePage onRecipeClick={handleRecipeClick} onNavigate={handleNavigation} />;
     }
   };
 
-  if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} />;
-  }
+  if (showSplash) return <SplashScreen onComplete={handleSplashComplete} />;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -148,21 +115,21 @@ function AppRoot() {
         </>
       )}
 
-      <main className="min-h-screen">
-        {renderCurrentPage()}
-      </main>
-
+      <main className="min-h-screen">{renderCurrentPage()}</main>
       <PWABadge />
     </div>
   );
 }
 
+// === RENDER APP ===
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister: localStoragePersister }}
+    >
       <AppRoot />
-      {/* 🧩 Tambahkan Devtools di bawah sini */}
       <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  </StrictMode>,
+    </PersistQueryClientProvider>
+  </StrictMode>
 );
