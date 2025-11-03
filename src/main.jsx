@@ -1,6 +1,7 @@
 // src/main.jsx
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import SplashScreen from './pages/SplashScreen';
 import HomePage from './pages/HomePage';
 import MakananPage from './pages/MakananPage';
@@ -13,6 +14,17 @@ import DesktopNavbar from './components/navbar/DesktopNavbar';
 import MobileNavbar from './components/navbar/MobileNavbar';
 import './index.css'
 import PWABadge from './PWABadge';
+
+// Buat QueryClient untuk caching
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // Cache 5 menit
+      cacheTime: 10 * 60 * 1000, // Simpan di memory 10 menit
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function AppRoot() {
   const [showSplash, setShowSplash] = useState(true);
@@ -153,7 +165,8 @@ function AppRoot() {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AppRoot />
+    <QueryClientProvider client={queryClient}>
+      <AppRoot />
+    </QueryClientProvider>
   </StrictMode>,
 )
-
