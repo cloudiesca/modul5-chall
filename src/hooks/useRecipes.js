@@ -1,92 +1,69 @@
-import { useState, useEffect, useCallback } from 'react';
+// src/hooks/useRecipes.js
+import { useQuery } from '@tanstack/react-query';
 import recipeService from '../services/recipeService';
 
 /**
- * Custom hook for fetching recipes
- * @param {Object} params - Query parameters
- * @returns {Object} - { recipes, loading, error, pagination, refetch }
+ * Hook untuk mengambil daftar resep
  */
 export function useRecipes(params = {}) {
-    const [recipes, setRecipes] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [pagination, setPagination] = useState(null);
+    const queryKey = ['recipes', params];
 
-    const fetchRecipes = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await recipeService.getRecipes(params);
-
-            if (response.success) {
-                setRecipes(response.data || []);
-                setPagination(response.pagination || null);
-            } else {
-                setError(response.message || 'Failed to fetch recipes');
-            }
-        } catch (err) {
-            setError(err.message || 'An error occurred while fetching recipes');
-            setRecipes([]);
-        } finally {
-            setLoading(false);
+    const queryFn = async () => {
+        const response = await recipeService.getRecipes(params);
+        if (!response.success) {
+            throw new Error(response.message || 'Failed to fetch recipes');
         }
-    }, [JSON.stringify(params)]);
+        return response;
+    };
 
-    useEffect(() => {
-        fetchRecipes();
-    }, [fetchRecipes]);
+    const {
+        data,
+        isLoading,
+        isError,
+        refetch,
+    } = useQuery({
+        queryKey,
+        queryFn,
+        keepPreviousData: true,
+        staleTime: 1000 * 60 * 2, // cache valid 2 menit
+        cacheTime: 1000 * 60 * 5, // disimpan di memori 5 menit
+    });
 
     return {
-        recipes,
-        loading,
-        error,
-        pagination,
-        refetch: fetchRecipes,
+        recipes: data?.data || [],
+        pagination: data?.pagination || null,
+        loading: isLoading,
+        error: isError ? 'Gagal memuat data resep' : null,
+        refetch,
     };
 }
 
 /**
- * Custom hook for fetching a single recipe
- * @param {string} id - Recipe ID
- * @returns {Object} - { recipe, loading, error, refetch }
+ * Hook untuk mengambil satu resep berdasarkan ID
  */
 export function useRecipe(id) {
-    const [recipe, setRecipe] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const queryKey = ['recipe', id];
 
-    const fetchRecipe = useCallback(async () => {
-        if (!id) {
-            setLoading(false);
-            return;
+    const queryFn = async () => {
+        if (!id) return null;
+        const response = await recipeService.getRecipeById(id);
+        if (!response.success) {
+            throw new Error(response.message || 'Failed to fetch recipe');
         }
+        return response.data;
+    };
 
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await recipeService.getRecipeById(id);
-
-            if (response.success) {
-                setRecipe(response.data);
-            } else {
-                setError(response.message || 'Failed to fetch recipe');
-            }
-        } catch (err) {
-            setError(err.message || 'An error occurred while fetching recipe');
-            setRecipe(null);
-        } finally {
-            setLoading(false);
-        }
-    }, [id]);
-
-    useEffect(() => {
-        fetchRecipe();
-    }, [fetchRecipe]);
+    const { data, isLoading, isError, refetch } = useQuery({
+        queryKey,
+        queryFn,
+        enabled: !!id,
+        staleTime: 1000 * 60 * 2,
+    });
 
     return {
-        recipe,
-        loading,
-        error,
-        refetch: fetchRecipe,
+        recipe: data,
+        loading: isLoading,
+        error: isError ? 'Gagal memuat data resep' : null,
+        refetch,
     };
 }

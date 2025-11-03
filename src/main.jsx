@@ -2,6 +2,7 @@
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools' // 🧩 Tambahan Devtools
 import SplashScreen from './pages/SplashScreen';
 import HomePage from './pages/HomePage';
 import MakananPage from './pages/MakananPage';
@@ -15,13 +16,13 @@ import MobileNavbar from './components/navbar/MobileNavbar';
 import './index.css'
 import PWABadge from './PWABadge';
 
-// Buat QueryClient untuk caching
+// 🧠 Buat QueryClient untuk caching global
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // Cache 5 menit
-      cacheTime: 10 * 60 * 1000, // Simpan di memory 10 menit
-      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // cache tetap fresh 5 menit
+      cacheTime: 10 * 60 * 1000, // simpan cache 10 menit di memory
+      refetchOnWindowFocus: false, // biar gak refetch pas ganti tab
     },
   },
 });
@@ -71,7 +72,6 @@ function AppRoot() {
   const handleCreateSuccess = (newRecipe) => {
     alert('Resep berhasil dibuat!');
     setMode('list');
-    // Optionally navigate to the new recipe's category
     if (newRecipe && newRecipe.category) {
       setCurrentPage(newRecipe.category);
     }
@@ -83,7 +83,6 @@ function AppRoot() {
   };
 
   const renderCurrentPage = () => {
-    // Show Create Recipe Page
     if (mode === 'create') {
       return (
         <CreateRecipePage
@@ -93,7 +92,6 @@ function AppRoot() {
       );
     }
 
-    // Show Edit Recipe Page
     if (mode === 'edit') {
       return (
         <EditRecipePage
@@ -104,7 +102,6 @@ function AppRoot() {
       );
     }
 
-    // Show Recipe Detail
     if (mode === 'detail') {
       return (
         <RecipeDetail
@@ -116,7 +113,6 @@ function AppRoot() {
       );
     }
 
-    // Show List Pages
     switch (currentPage) {
       case 'home':
         return <HomePage onRecipeClick={handleRecipeClick} onNavigate={handleNavigation} />;
@@ -137,7 +133,6 @@ function AppRoot() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Only show navbar in list mode */}
       {mode === 'list' && (
         <>
           <DesktopNavbar
@@ -153,7 +148,6 @@ function AppRoot() {
         </>
       )}
 
-      {/* Main Content */}
       <main className="min-h-screen">
         {renderCurrentPage()}
       </main>
@@ -167,6 +161,8 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AppRoot />
+      {/* 🧩 Tambahkan Devtools di bawah sini */}
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </StrictMode>,
-)
+);
