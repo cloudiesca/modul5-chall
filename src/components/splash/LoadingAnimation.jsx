@@ -1,3 +1,22 @@
+import React, { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRecipe, useReviews, useCreateReview, useIsFavorited } from '../../hooks/useRecipes';
+import LoadingAnimation from '../splash/LoadingAnimation'; // ✅ Pakai yang sudah ada
+
+export default function RecipeDetail({ recipeId, onBack, onEdit, category = 'makanan' }) {
+    // ... (kode yang sama seperti sebelumnya)
+
+    // === Loading State ===
+    if (recipeLoading || (!currentRecipe && !recipeError)) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <LoadingAnimation /> {/* ✅ Pakai component yang sudah ada */}
+            </div>
+        );
+    }
+
+    // ... (sisa kode sama)
+}
 // src/components/splash/LoadingAnimation.jsx
 export default function LoadingAnimation({ fadeIn, progress }) {
     return (
