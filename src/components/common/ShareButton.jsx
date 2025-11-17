@@ -1,13 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Share2, X, Copy, Check, Facebook, Twitter, MessageCircle } from 'lucide-react';
 
 export default function ShareButton({ recipeId, recipeName, recipeImage }) {
     const [showModal, setShowModal] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [shareUrl, setShareUrl] = useState('');
 
-    // Ambil URL dari browser (otomatis menyesuaikan di Vercel)
-    const baseUrl = window.location.origin;
-    const shareUrl = `${baseUrl}/recipe/${recipeId}`;
+    useEffect(() => {
+        // Dijalankan di client setelah mount
+        const baseUrl =
+            typeof window !== 'undefined'
+                ? window.location.origin
+                : 'https://resep-nusantara.vercel.app'; // Ganti domain kamu di sini
+        setShareUrl(`${baseUrl}/recipe/${recipeId}`);
+    }, [recipeId]);
+
     const shareText = `Cek resep ${recipeName} di Resep Nusantara!`;
 
     const handleCopyLink = async () => {
@@ -16,7 +23,6 @@ export default function ShareButton({ recipeId, recipeName, recipeImage }) {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {
-            // Fallback untuk browser lama
             const textArea = document.createElement('textarea');
             textArea.value = shareUrl;
             document.body.appendChild(textArea);
@@ -37,7 +43,7 @@ export default function ShareButton({ recipeId, recipeName, recipeImage }) {
                     url: shareUrl,
                 });
             } catch (err) {
-                console.log('Share dibatalkan atau gagal:', err);
+                console.log('Share dibatalkan:', err);
             }
         } else {
             setShowModal(true);
@@ -80,7 +86,6 @@ export default function ShareButton({ recipeId, recipeName, recipeImage }) {
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
                     <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-slideUp">
-                        {/* Header */}
                         <div className="flex items-center justify-between p-6 border-b border-slate-200">
                             <h3 className="text-xl font-bold text-slate-800">Share Resep</h3>
                             <button
@@ -91,9 +96,7 @@ export default function ShareButton({ recipeId, recipeName, recipeImage }) {
                             </button>
                         </div>
 
-                        {/* Content */}
                         <div className="p-6">
-                            {/* Preview resep */}
                             <div className="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-xl">
                                 {recipeImage && (
                                     <img
@@ -107,7 +110,6 @@ export default function ShareButton({ recipeId, recipeName, recipeImage }) {
                                 </div>
                             </div>
 
-                            {/* Copy link */}
                             <div className="mb-6">
                                 <label className="block text-sm font-medium text-slate-700 mb-2">Link</label>
                                 <div className="flex gap-2">
@@ -127,16 +129,11 @@ export default function ShareButton({ recipeId, recipeName, recipeImage }) {
                                         {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                                     </button>
                                 </div>
-                                {copied && (
-                                    <p className="text-xs text-green-600 mt-2">✓ Link berhasil disalin!</p>
-                                )}
+                                {copied && <p className="text-xs text-green-600 mt-2">✓ Link berhasil disalin!</p>}
                             </div>
 
-                            {/* Share Options */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-3">
-                                    Bagikan via
-                                </label>
+                                <label className="block text-sm font-medium text-slate-700 mb-3">Bagikan via</label>
                                 <div className="grid grid-cols-3 gap-3">
                                     {shareOptions.map((option) => (
                                         <a
